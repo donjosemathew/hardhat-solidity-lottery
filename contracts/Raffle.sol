@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
-import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
 
 error Raffle_NotEnoughETHAmount();
 error Raffle__failed();
 error Raffle__NotOpen();
+error Raffle_UpKeepNotNeeded();
 
 abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     enum RaffleState {
@@ -59,9 +60,9 @@ abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     }
 
     // function pickRandomNumber() {}
-    function checkUpKeep(
-        bytes calldata
-    ) external override returns (bool upKeepNeeded, bytes memory) {
+    function checkUpkeep(
+        bytes memory
+    ) public view override returns (bool upKeepNeeded, bytes memory) {
         bool isOpen = (RaffleState.OPEN == s_raffleState);
         bool timePassed = ((block.timestamp - s_lastTimeStamp)) > i_interval;
         bool hasPlayers = (s_players.length > 0);
@@ -69,7 +70,12 @@ abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         upKeepNeeded = isOpen && timePassed && hasPlayers && hasBalance;
     }
 
-    function requestRandomNumber() external {
+    function performUpKeep(bytes memory) external {
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (upkeepNeeded) {
+            revert Raffle_UpKeepNotNeeded();
+        }
+
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
@@ -90,6 +96,7 @@ abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         s_recentWinner = recentWinner;
         s_raffleState = RaffleState.OPEN;
         s_players = new address payable[](0);
+        s_lastTimeStamp = block.timestamp;
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
         if (!success) {
             revert Raffle__failed();
@@ -108,5 +115,25 @@ abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
     }
+
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
+
+    function getNumWords() public pure returns (uint256) {
+        return NUM_WORDS;
+    }
+
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+
+    function getlatestTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRequestConfirmations() public pure returns (uint256) {
+        return REQUEST_CONFIRMATIONS;
+    }
 }
-//14:47
+//14:58
