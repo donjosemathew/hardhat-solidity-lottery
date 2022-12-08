@@ -3,13 +3,12 @@ pragma solidity ^0.8.7;
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.sol";
-
 error Raffle_NotEnoughETHAmount();
 error Raffle__failed();
 error Raffle__NotOpen();
 error Raffle_UpKeepNotNeeded();
 
-abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
+contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     enum RaffleState {
         OPEN,
         CALCULATING
@@ -70,7 +69,7 @@ abstract contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         upKeepNeeded = isOpen && timePassed && hasPlayers && hasBalance;
     }
 
-    function performUpKeep(bytes memory) external {
+    function performUpkeep(bytes memory) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (upkeepNeeded) {
             revert Raffle_UpKeepNotNeeded();

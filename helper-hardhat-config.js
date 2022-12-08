@@ -30,6 +30,17 @@ const networkConfig = {
     vrfCoordinatorV2: "0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D",
     ethUsdPriceFeed: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e",
   },
+  31337: {
+    name: "localhost",
+    entranceFee: ethers.utils.parseEther("0.01"),
+    subscriptionId: "588",
+    gasLane:
+      "0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc", // 30 gwei
+    keepersUpdateInterval: "30",
+    raffleEntranceFee: ethers.utils.parseEther("0.01"), // 0.01 ETH
+    callbackGasLimit: "500000", // 500,000 gas
+    interval: "30",
+  },
 };
 
 const developmentChains = ["hardhat", "localhost"];
